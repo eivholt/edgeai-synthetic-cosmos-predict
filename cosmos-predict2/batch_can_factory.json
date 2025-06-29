@@ -1,0 +1,50 @@
+[
+  {
+    "prompt": "A conveyor belt in a factory. Orange colored drink cans are lined up on a conveyor belt, moving towards a sorting station for packaging. The drink cans have no logo. There is 2 cm of space between the drink cans. The conveyor belt is colored green. The factory floor is well lit, workers are surveying the factory line. Perspective is from directly above, facing down to the conveyor belt.",
+    "output_image": "outputs/factory/00001.jpg"
+  },
+  {
+    "prompt": "A conveyor belt in a factory. Blue colored soda cans are lined up on the conveyor belt, moving towards a sorting station for packaging. The soda cans have no logo. There is 5 cm of space between the soda cans. The conveyor belt is colored white. The factory floor is dimly lit, warm temperature fluorescent roof lights, workers are surveying the factory line. Perspective is 1 meter beside the conveyor belt, facing directly toward the belt.",
+    "output_image": "outputs/factory/00002.jpg"
+  },
+  {
+    "prompt": "A conveyor belt in a factory. Rainbow colored drink cans are lined up on a conveyor belt, moving towards a sorting station for packaging. There is 10 cm of space between the drink cans. The conveyor belt is colored black. The factory floor is well lit and deserted. Perspective is 1 meter to the left and 1 meter above the conveyor belt, facing directly toward the belt.",
+    "output_image": "outputs/factory/00003.jpg"
+  },
+  {
+    "prompt": "A conveyor belt in a factory. Colored drink cans are lined up on a conveyor belt. There is 2 cm of space between the drink cans. The conveyor belt is colored. The factory floor is well lit, workers are surveying the factory line. Perspective is from the factory roof above, facing down at the conveyor belt.",
+    "output_image": "outputs/factory/00004.jpg"
+  },
+  {
+    "prompt": "A conveyor belt in a factory. Uncolored aluminum soda cans are lined up on the conveyor belt. There is 5 cm of space between each soda cans. The conveyor belt is colored. The factory floor is barely lit and deserted of workers. Perspective is 1 meter beside the conveyor belt, facing directly toward the belt.",
+    "output_image": "outputs/factory/00005.jpg"
+  },
+  {
+    "prompt": "A conveyor belt in a factory. Rainbow colored drink cans are lined up on a conveyor belt. There is 10 cm of space between each drink can. The conveyor belt is colored. The factory floor is well lit and deserted. Cardboard boxes are stacked around the conveyor belt. Perspective is 1 meter to the left and 1 meter above the conveyor belt, facing directly toward the belt.",
+    "output_image": "outputs/factory/00006.jpg"
+  },
+  {
+    "prompt": "A narrow conveyor belt in a factory. Colored drink cans are lined up on a conveyor belt. There is 2 cm of space between the drink cans. The conveyor belt is colored. The factory floor is well lit, workers are surveying the factory line. Perspective is from the factory roof above, facing down at the conveyor belt.",
+    "output_image": "outputs/factory/00007.jpg"
+  },
+  {
+    "prompt": "A narrow conveyor belt in a factory. Uncolored aluminum soda cans are lined up on the conveyor belt. There is 5 cm of space between each soda cans. The conveyor belt is colored. The factory floor is barely lit and deserted of workers. Perspective is 1 meter beside the conveyor belt, facing directly toward the belt.",
+    "output_image": "outputs/factory/00008.jpg"
+  },
+  {
+    "prompt": "A narrow conveyor belt in a factory. Rainbow colored drink cans are lined up on a conveyor belt. There is 10 cm of space between each drink can. The conveyor belt is colored. The factory floor is well lit and deserted. Cardboard boxes are stacked around the conveyor belt. Perspective is 1 meter to the left and 1 meter above the conveyor belt, facing directly toward the belt.",
+    "output_image": "outputs/factory/00009.jpg"
+  },
+  {
+    "prompt": "A wide conveyor belt in a factory. Colored drink cans are lined up on a conveyor belt. There is 3 cm of space between the drink cans. The conveyor belt is made of steel rollers. The factory floor is well lit, workers are surveying the factory line, forklifts are seen in the background. Perspective is from the factory roof above, facing down at the conveyor belt.",
+    "output_image": "outputs/factory/00010.jpg"
+  },
+  {
+    "prompt": "A wide conveyor belt in a factory. Uncolored aluminum soda cans are lined up on the conveyor belt. There is 6 cm of space between each soda cans. The conveyor belt is made of steel rollers. The factory floor is barely lit and deserted of workers. Perspective is 1 meter beside the conveyor belt, facing directly toward the belt.",
+    "output_image": "outputs/factory/00011.jpg"
+  },
+  {
+    "prompt": "A wide conveyor belt in a factory. Multi colored drink cans are lined up on a conveyor belt. There is 15 cm of space between each drink can. The conveyor belt is made of steel rollers. The factory floor is well lit and deserted. Cardboard boxes are stacked around the conveyor belt. Perspective is 1 meter to the left and 1 meter above the conveyor belt, facing directly toward the belt.",
+    "output_image": "outputs/factory/00012.jpg"
+  }
+]
