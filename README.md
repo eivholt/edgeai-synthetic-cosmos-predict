@@ -42,15 +42,16 @@ The video is a first-person perspective from the viewpoint of a large, humanoid 
 
 Sora:
 
-<video src="videos/20250615_2143_Industrial Robot Precision_simple_compose_01jxthvzwdegrv0tk4jyfk9v8p.mp4" controls></video>
+[![Warehouse Robot Video](https://img.youtube.com/vi/NK6jpjv-des/0.jpg)](https://youtu.be/NK6jpjv-des)
 
 Sora:
 
-<video src="videos/20250615_2143_Industrial Robot Precision_simple_compose_01jxthvzwkfwfv69wvf59d58dg.mp4" controls></video>
+[![Warehouse Robot Video](https://img.youtube.com/vi/UAFlf6SF-_Q/0.jpg)](https://youtu.be/UAFlf6SF-_Q)
 
 Cosmos Predict:
 
-<video src="videos/robot_warehouse01.mp4" controls></video>
+[![Warehouse Robot Video Cosmos-Predict1-7B-Text2World](https://img.youtube.com/vi/hWOfi2IGxbg/0.jpg)](https://youtu.be/hWOfi2IGxbg)
+
 
 The Sora videos are of great fidelity, but notice how Cosmos Predict defaults to a setting suitable for edge AI scenarios. We could achieve the same results with Sora, but it would require a lot of trial and error with targeted prompting. Without API access to Sora, ability to change seed or negative prompt, methodically generating 10.000s of variations for model training is impractical.
 
@@ -78,7 +79,7 @@ A first person view from the perspective of a FPV quadcopter as it is flying ove
 ```
 - Wait about 60 seconds to see the results.
 
-<video src="videos/cosmos-predic-web-docks-sunny.mp4" controls></video>
+[![Cosmos-Predict1-7B-Text2World Docks sunny](https://img.youtube.com/vi/V2hm48HPlns/0.jpg)](https://youtu.be/V2hm48HPlns)
 
 To download the generated video we can enter the following JavaScript into Console in the browser developer tools:
 
@@ -115,7 +116,7 @@ Now try a slight variation to the text prompt to get instant weather variation. 
 
 >A first person view from the perspective of a FPV quadcopter as it is flying over a harbor port. The FPV drone is slowly moving across the harbor, 20 meters above the ground, looking down at cargo containers, trucks and workers on the docks. The weather is cloudy, it is snowing lightly, the ground is covered in a 1 cm layer of snow. Wheel tracks are visible in the snow. Photorealistic
 
-<video src="videos/cosmos-predic-web-docks-snow.mp4" controls></video>
+[![Cosmos-Predict1-7B-Text2World Docks Snow](https://img.youtube.com/vi/kq9WroFR4X8/0.jpg)](https://youtu.be/kq9WroFR4X8)
 
 With each result we get a refined prompt that might be useful for further enhancements:
 
@@ -125,13 +126,13 @@ Another slight prompt change can dramatically change the output:
 
 >View directly underneath a first-person quadcopter as it is flying over a harbor port. The view is slowly moving across the harbor, 10 meters above the ground, looking straight down at cargo containers, trucks and workers on the docks. The weather is cloudy, it is raining heavily, the ground is wet. Photorealistic
 
-<video src="videos/cosmos-predic-web-docks-rain.mp4" controls></video>
+[![Cosmos-Predict1-7B-Text2World Docks rain](https://img.youtube.com/vi/68v7ypUYPfw/0.jpg)](https://youtu.be/68v7ypUYPfw)
 
 We can easily achieve combined environmental factors that would require a lot of work if this was created as a 3D scene in Omniverse.
 
 >View directly underneath a first-person quadcopter as it is flying over a harbor port. The view is slowly moving across the harbor, 10 meters above the ground, looking straight down at cargo containers, trucks and workers on the docks. The weather is clear, it is midnight and dark. The ground and objects are illuminated by a full moon and powerful site flood lights. It is raining heavily, the ground is wet. Photorealistic
 
-<video src="videos/cosmos-predic-web-docks-rain-dark.mp4" controls></video>
+[![Cosmos-Predict1-7B-Text2World Docks rain dark](https://img.youtube.com/vi/9oNFXRr7Pf4/0.jpg)](https://youtu.be/9oNFXRr7Pf4)
 
 Extract stills
 - Install FFmpeg (linux): 
@@ -393,7 +394,7 @@ pip install --pre torch torchvision torchaudio \
 python -m pip install --no-build-isolation -e grounding_dino
 ```
 
-Included in this project repository are some examples on how to produce labeled object segmentation data, bounding boxes and images with visual annotations for quality control and tuning. One should expect to have to tune text prompt, box threshold and text threshold. `--box_threshold` controls at what confidence level the segmentation model will keep an identified object of interest, while `--text_threshold` sets the level of confidence the grounding model will use to consider a segmented object equal to one of the prompted objects. These levels depend on the use case, but a good starting value for both are 0.25.
+Included in this project repository are some examples on how to produce labeled object segmentation data, bounding boxes and images with visual annotations for quality control and tuning. 
 
 For image input, [grounded_sam2_batch_image.py](labelling-grounded-sam2/grounded_sam2_batch_image.py)
 ```bash
@@ -401,6 +402,25 @@ python grounded_sam2_batch_image.py   --input_folder "can_factory/input_frames" 
 ```
 
 ![](images/can_factory_annotated.webp "Labeled images with segmentation masks and bounding boxes")
+
+### A note on thresholds
+Grounded‑SAM‑2 inherits two key filtering knobs from Grounding DINO `--box_threshold` and `--text_threshold`. Both are cosine‑similarity cut‑offs in the range 0‑1, but they act at different stages of the pipeline:
+| Stage                | What is scored?                                                                                   | Kept when score ≥ threshold              | Typical default                 |
+| -------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------- |
+| **`box_threshold`**  | The highest similarity between an image **region (bounding box)** and **any token** in the prompt | The whole box                            |  0.25–0.30 (case‑study configs) |
+| **`text_threshold`** | The similarity between that region and **each individual token**                                  | The token becomes the label for that box |  0.25 (Hugging Face default)    |
+
+#### How they work together
+- **Box screening** The model predicts up to 900 candidate boxes. Any whose best token similarity is below box_threshold are discarded outright.
+
+- **Label assignment** For every surviving box, each prompt token is compared to the box feature; tokens scoring below `text_threshold` are dropped, so they never appear in the final phrase.
+
+#### Practical effect
+- Raise thresholds → higher precision, lower recall. You get fewer false detections and fewer stray sub‑word labels such as `##lift` or `canperson`, due to tokenization of `can`, `person` and `forklift`, but you may miss faint objects.
+
+- Lower thresholds → higher recall, lower precision. More boxes and more tokens survive, which can help in cluttered scenes but increases the need for post‑processing. A common starting point is `box_threshold 0.3`, `text_threshold 0.25` as recommended in the Grounded‑SAM demo scripts.
+
+In short, `--box_threshold` decides whether a region is worth keeping at all, while `--text_threshold` decides which words (if any) are attached to that region. Tune them together to balance missed objects against noisy labels.
 
 To be able to upload label data to Edge Impulse Studio we need to convert the output to one of the [supported formats](https://docs.edgeimpulse.com/docs/edge-impulse-studio/data-acquisition/uploader#understanding-image-dataset-annotation-formats), in this case Pascal VOC XML.
 
@@ -414,7 +434,7 @@ Now the dataset is ready for uploading to Edge Impulse Studio. Practically the i
 Once in Edge Impulse Studio we can design an object detection neural network and evalutate the results. We can keep generating more data until classification results stop improving.
 ![](images/EI-evaluate-model.png "Classification results")
 
-
+## 
 
 python grounded_sam2_tracking_demo_custom_video_input_gd1.0_local_model.py --video_path ../edgeai-synthetic-cosmos-predict1/videos/cosmos-predic-web-docks-rain.mp4 --text_prompt "drone. container. forklift. semitrailer." --OUTPUT_VIDEO_PATH ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/rain.mp4 --SOURCE_VIDEO_FRAME_DIR ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/custom_video_frames --SAVE_TRACKING_RESULTS_DIR ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/tracking_results
 
