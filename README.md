@@ -1,21 +1,21 @@
-# Creating object detection model for edge AI using synthetic training images created with Nvidia Cosmos-predict1
+# Creating object detection model for edge AI using synthetic training images created with NVIDIA Cosmos-Predict2
 
 ## Preface
-Nvidia has released a family of World Fundation Models (WFMs). All models have to some degree overlapping areas of use and can be combined for an efficient pipeline. This article is about **Cosmos Predict**, **Cosmos Transfer** and **Cosmos Reason** are covered in separate articles.
+NVIDIA has released a family of World Foundation Models (WFMs). All models have to some degree overlapping areas of use and can be combined for an efficient pipeline. This article is about **Cosmos Predict**, **Cosmos Transfer** and **Cosmos Reason** are covered in separate articles.
 
 - [**Cosmos Transfer**](https://github.com/nvidia-cosmos/cosmos-transfer1) can amplify text and video input to create variations of environment and lighting conditions for training data for visual AI. Multiple input signals enable control of physics-aware world generation. We can compose a 3D scene in NVIDIA Omniverse and have Cosmos Transfer create the variation needed to train robust models for visual computing.
-- [**Cosmos Reason**](https://github.com/nvidia-cosmos/cosmos-reason1) is capable of reasoning based on spatial and temporal understanding of multimodal input. It can interpet what a sensor is seeing and predict consequences. It can also be a helpful tool to automatically evaluate the quality of synthetic training data.
+- [**Cosmos Reason**](https://github.com/nvidia-cosmos/cosmos-reason1) is capable of reasoning based on spatial and temporal understanding of multimodal input. It can interpret what a sensor is seeing and predict consequences. It can also be a helpful tool to automatically evaluate the quality of synthetic training data.
 - [**Cosmos Predict**](https://github.com/nvidia-cosmos/cosmos-predict2) can create training data, both single image and video clip, for visual AI based on text- and image input.
 
 All models are pre-trained for autonomous vehicle and robotic scenarios, and support post-training for specific use cases.
 
 ## Prerequisites
 - Python
-- Optional: Access to Nvidia GPU with at least 32 GB VRAM
-- Optional: Nvidia Omniverse Isaac Sim
+- Optional: Access to NVIDIA GPU with at least 32 GB VRAM
+- Optional: NVIDIA Omniverse Isaac Sim
 
 ## What to expect
-This tutorial shows how to use [**Nvidia Cosmos-predict2**](https://github.com/nvidia-cosmos/cosmos-predict2), released June 2025 to generate physics aware synthetic images for training models for visual computing. The tutorial will show hands-on approaches on how to generate text- and image-prompted images and videos, automatically segment and label objects of interest and prepare data for model training in [Edge Impulse Studio](https://edgeimpulse.com/).
+This tutorial shows how to use [**NVIDIA Cosmos-predict2**](https://github.com/nvidia-cosmos/cosmos-predict2), released June 2025 to generate physics aware synthetic images for training models for visual computing. The tutorial will show hands-on approaches on how to generate text- and image-prompted images and videos, automatically segment and label objects of interest and prepare data for model training in [Edge Impulse Studio](https://edgeimpulse.com/).
 
 We'll start with a comparison of other methods and models, walk through an easy to perform web-based demo, dive into self-hosting the smaller models, use local AI-labeling models, take full advantage of single-image generation with batching and prompt enrichment with LLMs, before we move to the larger models and video generation.
 
@@ -27,10 +27,11 @@ The traditional method to create training data for visual computing is to manual
 ### Generating Synthetic Images with GPT-4 (DALL-E)
 ![](images/EI-synthetic-image.webp "Generating Synthetic Images with GPT-4 (DALL-E)")
 Realistic training images can effortlessly be [generated using diffusion models such as GPT-4 Image/DALL-E](https://docs.edgeimpulse.com/docs/edge-impulse-studio/data-acquisition/synthetic-data#generating-synthetic-images-with-gpt-4-dall-e).
-These images needs to be labelled manually or by one of the many [AI assisted labelling methods](https://docs.edgeimpulse.com/docs/edge-impulse-studio/data-acquisition/ai-labeling).
+These images need to be labelled manually or by one of the many [AI assisted labelling methods](https://docs.edgeimpulse.com/docs/edge-impulse-studio/data-acquisition/ai-labeling), e.g. OWL-ViT.
 
-#### Note about AI labeling
-> Models used for labeling are trained on vast collections of manually labeled objects. They usually work great for common objects. For labeling uncommon objects, or even objects that are new, e.g. new commercial products, these models fall short. In these cases **Cosmos Transfer** offer a novel architecture as label data from a 3D scene can be reused. This is due to the highly controllable nature of **Cosmos Transfer**, where certain aspects of the input signal data will be respected when a new variation of a Omniverse-created video sequence is generated. This can be achieved in a number of ways thanks to multimodal control signal input. In short - a new video clip is generated, for instance with a different background, but objects of interest stay at the same screen-space position as in the input clip. Bounding boxes therefore remain valid for both clips. **Cosmos Transfer** is not covered in this article, but this should be an important feature to consider when choosing among the different Cosmos models.
+> Note about AI labeling
+> 
+> Models used for labeling are trained on vast collections of manually labeled objects. They usually work great for common objects. For labeling uncommon objects, or even objects that are new, e.g. brand-new commercial products, these models fall short. In these cases **Cosmos Transfer** offer a novel architecture as label data from a 3D scene can be reused. This is due to the highly controllable nature of **Cosmos Transfer**, where certain aspects of the input signal data will be respected when a new variation of a Omniverse-created video sequence is generated. This can be achieved in a number of ways thanks to multimodal control signal input. In short - a new video clip is generated, for instance with a different background, but objects of interest stay at the same screen-space position as in the input clip. Bounding boxes therefore remain valid for both clips. **Cosmos Transfer** is not covered in this article, but this should be an important feature to consider when choosing among the different Cosmos models.
 
 Another variation is to use video generation, such as **OpenAI Sora**, **Google Gemini Veo 3** or [any high performing video generators](https://huggingface.co/spaces/Vchitect/VBench_Leaderboard). Text, image and video input can prompt generation of video sequences. The advantage of generating video clips over still images is that we get the objects of interest in many different angles with minimal effort. For object detection, these sequences can then be split into individual still frames, before labelling.
 
@@ -72,7 +73,7 @@ The Cosmos model's advantages do however come with a cost - they require a lot o
 |Suitability for novel objects|High|Low|Medium|Low|Medium|
 |Automatic labeling quality|Medium|Medium|High*|Medium|High*|*Perfect labeling from Replicator semantic tagging|
 
-## Web demo
+## Quick-start
 We can get an impression of the capabilities of Cosmos Predict with almost no effort. This approach does however severely limit options for synthesis customization. Be aware that the 20 request limit does not reset periodically. As of June 2025 **cosmos-predict2** is not available for testing at NVIDIA Build, only the previous **cosmos-predict1-7b**.
 - Go to [build.nvidia.com](https://build.nvidia.com/nvidia/cosmos-predict1-7b), register or log on.
 - Enter a prompt, such as:
@@ -120,7 +121,7 @@ Now try a slight variation to the text prompt to get instant weather variation. 
 
 [![Cosmos-Predict1-7B-Text2World Docks Snow](https://img.youtube.com/vi/kq9WroFR4X8/0.jpg)](https://youtu.be/kq9WroFR4X8)
 
-With each result we get a refined prompt that might be useful for further enhancements:
+The API automatically returns a refined prompt; we can feed this back into the model (or an LLM) to iterate on scene detail:
 
 >In a breathtaking aerial journey, we soar above a bustling harbor, captured through the lens of a cutting-edge first-person view (FPV) quadcopter. The camera glides smoothly at a steady 20 meters above the ground, revealing a sprawling landscape of vibrant cargo containers stacked neatly on the docks, their bright colors contrasting against the deep blue of the water. Below, a lively scene unfolds as workers in high-visibility vests coordinate the loading and unloading of containers, while trucks and forklifts crisscross the area, their movements a testament to the port's dynamic energy. The sun bathes the scene in a golden-hour glow, casting long shadows that dance across the ground, while the clear sky enhances the vivid hues of the containers and the shimmering water. This cinematic experience, enhanced by dynamic color grading and a steady, immersive perspective, invites viewers to feel the thrill of flight and the rhythm of the port's industrious life.
 
@@ -152,10 +153,10 @@ Extract stills
 - Train model.
 ![](images/EI-train-model.png "Train model")
 
-## Self-hosting
+## Deep dive
 Now that we have aquired a sense of the capabilities of Cosmos Predict the next natural step is to host the models ourself so that we can further explore capabilities. First we need to be aware of the hardware requirements of different features:
 
-The following table shows the GPU memory requirements for different Cosmos-Predict2 models:
+The following table shows the [GPU memory requirements](https://docs.nvidia.com/cosmos/latest/predict2/model_matrix.html) for different Cosmos-Predict2 models:
 
 | Model | Required GPU VRAM |
 |-------|-------------------|
@@ -169,7 +170,7 @@ For optimal performance
 * At least 32GB of GPU VRAM for 2B models
 * At least 64GB of GPU VRAM for 14B models
 
-I am running locally on a NVIDIA RTX 5090 with 32 GB VRAM. I have been able to run Text2Image 2B, but not the rest. One might get lucky and be able to run Video2World 2B parameters. We'll start by running Text2Image 2B on the 5090 and then move on to a rented GPU farm.
+For running locally a NVIDIA RTX 5090 with 32 GB VRAM was used for this article. On this, only the Text2Image 2B model was able to run. One might get lucky and be able to run Video2World 2B parameters. We'll start by running Text2Image 2B on the 5090 and then move on to a rented GPU farm.
 
 ### Installing cosmos-predict2
 Follow the [repository instructions](https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/setup.md), the Docker container route is recommended to try to avoid complicated issues with Blackwell GPUs, CUDA and Torch.
@@ -189,7 +190,7 @@ docker pull nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
 
 1. Get a [Hugging Face](https://huggingface.co/settings/tokens) access token with `Read` permission
 2. Login: `huggingface-cli login`
-3. The [Llama-Guard-3-8B terms](https://huggingface.co/meta-llama/Llama-Guard-3-8B) must be accepted. Approval will be required before Llama Guard 3 can be downloaded.
+3. The [Llama-Guard-3-8B terms](https://huggingface.co/meta-llama/Llama-Guard-3-8B) must be accepted. Approval will be required before the gated Llama Guard 3 checkpoints can be downloaded.
 4. Download models. Models for running Cosmos-Predict2-2B-Text2Image alone can run up near 200GB in checkpoint space.
 
 | Models | Link | Download Command | Notes |
@@ -352,26 +353,29 @@ For this article more than 6000 images were generated with this method. Using th
 
 ![](images/can_factory/can_factory_batch.png "Batch output")
 
-## Notes on prompting for realism
-Diffusion models like the one Cosmos Predic uses are currently achieving increadible image fidelity. When generating images for training object detection models intended to run on constrained hardware, or any type of hardware for that matter, best results are achieved by generating images of a quality that closest resembles the quality the device itself produces. This should in theory be possible to achieve by prompting e.g. 
-```
-photographed with a cheap 2‑megapixel CMOS sensor, f/2.2 2.2 mm lens, 80‑degree FOV, slight barrel distortion, soft focus, ISO 800 with visible sensor noise, JPEG artefacts at 80 % quality, mild purple fringing, corner vignetting, clipped highlights and crushed shadows, white‑balance drift, overall low‑contrast snapshot
-```
-
-or by adding --negative_prompt e.g. 
-```
-sharp focus, ultra‑high detail, DSLR, 4K, cinematic lighting, clean edges, HDR, no noise, no artefacts
-```
-
-Testing show this has little desired effect in Cosmos Predict or even with Sora, probably due to the training data. With the Cosmos models however, we have the option to fine-tune to our needs.
-
-Also note that adding "Photorealistic" is recommended in the documentation, but shows no significance in testing.
+> Notes on prompting for realism
+> 
+> Diffusion models like the one Cosmos Predict uses are currently achieving increadible image fidelity. When generating images for training object detection models intended to run on constrained hardware, or any type of hardware for that matter, best results are achieved by generating images of a quality that closest resembles the quality the device itself produces. This should in theory be possible to achieve by prompting e.g. 
+> ```
+> photographed with a cheap 2‑megapixel CMOS sensor, f/2.2 2.2 mm lens, 80‑degree FOV, slight barrel distortion, soft focus, ISO 800 with visible sensor noise, JPEG artefacts at 80 % quality, mild purple fringing, corner vignetting, clipped highlights and crushed shadows, white‑balance drift, overall low‑contrast snapshot
+> ```
+>
+> or by adding --negative_prompt e.g. 
+>```
+> sharp focus, ultra‑high detail, DSLR, 4K, cinematic lighting, clean edges, HDR, no noise, no artefacts
+> ```
+>
+> Experiments suggest that low‑fidelity camera‑noise prompts have limited impact on Cosmos Predict or Sora outputs—likely because the training corpus emphasises high‑quality footage. With the Cosmos models however, we have the option to fine-tune to our needs.
+> 
+> Also note that adding "Photorealistic" is recommended in the documentation, but shows no significance in testing.
 
 ### Advanced: LLM-augmented prompt generation for Text2Image
 To further bend the limitations of batch prompting and seed iteration we can use an LLM to augment and multiply prompts. Experimentation has shown that using a web-search capable LLM with a detailed description of intended use provides useful results. A prompt might look like so:
 
 ```
-I am using NVIDIA Cosmos-predict2 to generate images to train object detection models. My model needs to see many images with variations of realistic situations with drink cans in a factory and workers. I am running a loop where I am incrementing seed and for each iteration generating an image for each prompt from a batch file. Provide a table of 30 new variations by following my examples. Feel add realistic objects that could appear in a drink can factory, as long as drink cans and workers are present. I will use a open vocabulary segmentation model for AI labeling cans and workers. Output the new variations as a json-formatted list. [
+I am using NVIDIA Cosmos-predict2 to generate images to train object detection models. My model needs to see many images with variations of realistic situations with drink cans in a factory and workers. I am running a loop where I am incrementing seed and generating an image for each iteration, for each prompt, from a batch file. Provide a table of 30 new variations by following my examples. Feel add realistic objects that could appear in a drink can factory, as long as drink cans and workers are present. I will use a open vocabulary segmentation model for AI labeling cans and workers. Output the new variations as a json-formatted list. 
+
+[
   {
     "prompt": "A conveyor belt in a factory. Orange colored drink cans are lined up on a conveyor belt, moving towards a sorting station for packaging. The drink cans have no logo. There is 2 cm of space between the drink cans. The conveyor belt is colored green. The factory floor is well lit, workers are surveying the factory line. Perspective is from directly above, facing down to the conveyor belt.",
     "output_image": ""
@@ -380,7 +384,7 @@ I am using NVIDIA Cosmos-predict2 to generate images to train object detection m
     "prompt": "A conveyor belt in a factory. Blue colored soda cans...
 ```
 
-[batch_can_factory_LLM_enhanced_template.json](cosmos-predict2/batch_can_factory_LLM_enhanced_template.json)
+Example results: [batch_can_factory_LLM_enhanced_template.json](cosmos-predict2/batch_can_factory_LLM_enhanced_template.json)
 
 This will produce 30 images with different settings for each iteration. Then the seed is incremented or randomized and a new set of 30 images is produced, with slight variations.
 
@@ -454,7 +458,7 @@ In short, `--box_threshold` decides whether a region is worth keeping at all, wh
 
 To be able to upload label data to Edge Impulse Studio we need to convert the output to one of the [supported formats](https://docs.edgeimpulse.com/docs/edge-impulse-studio/data-acquisition/uploader#understanding-image-dataset-annotation-formats), in this case Pascal VOC XML.
 
-[json_to_pascal_voc.py](labelling-grounded-sam2/json_to_pascal_voc.py)
+Conversion program: [json_to_pascal_voc.py](labelling-grounded-sam2/json_to_pascal_voc.py)
 ```bash
 python json_to_pascal_voc.py --json_dir can_factory/labels --xml_dir can_factory/pascal_voc_annotations
 ```
@@ -464,8 +468,8 @@ Now the dataset is ready for uploading to Edge Impulse Studio. Practically the i
 Once in Edge Impulse Studio we can design an object detection neural network and evalutate the results. We can keep generating more data until classification results stop improving.
 ![](images/EI-evaluate-model.png "Classification results")
 
-## 14B models, Text2World and Video2World
-To be able to run the larger models a home-GPU just won't cut it. Luckily we can experiment with the models with beefier hardware with little commitment. Many services offer pay-per-use GPU resources. For the Cosmos models we need to keep in mind that we need rather updated NVIDIA drivers and that the platforms usually only allow access to a docker container with no possibility for upgrading said drivers. Uncovering this up-front is almost impossible, outside contacting support. Beware before investing a lot in prepaid tokens! For instance, when attempting to run the Cosmos-Predic2 docker container on a NVIDIA H100 80GB host at [RunPod.io](https://www.runpod.io/) as of June 2025, one would get this warning:
+## Generating images and videos with 14B parameters models, Text2World and Video2World
+To be able to run the larger models a home-GPU just won't cut it. Luckily we can experiment with the models with beefier hardware with little commitment. Many services offer pay-per-use GPU resources. For the Cosmos models we need to keep in mind that we need rather updated NVIDIA drivers and that the platforms usually only allow access to a docker container with no possibility for upgrading said drivers. Uncovering this up-front is almost impossible, outside contacting support. Beware before investing a lot in prepaid tokens! For instance, when attempting to run the Cosmos-Predict2 docker container on a NVIDIA H100 80GB host at [RunPod.io](https://www.runpod.io/) as of June 2025, one would get this warning:
 
 ```
 ERROR: This container was built for NVIDIA Driver Release 570.86 or later, but version 565.57.01 was detected and compatibility mode is UNAVAILABLE.
@@ -473,8 +477,8 @@ ERROR: This container was built for NVIDIA Driver Release 570.86 or later, but v
 
 Driver version an be revealed using `nvidia-smi` and we need something like:
 
-```
-ubuntu@192-222-53-195:~$ nvidia-smi
+```bash
+nvidia-smi
 Sat May 24 12:47:34 2025       
 +-----------------------------------------------------------------------------------------+
 | NVIDIA-SMI 570.124.06             Driver Version: 570.124.06     CUDA Version: 12.8     |
@@ -696,7 +700,7 @@ python -m examples.video2world \
     --disable_guardrail \
     --offload_prompt_refiner
 ```
-This can be looped, incrementing or randomizing `--seed` to create different variants.
+This can be looped, while incrementing or randomizing `--seed` to create different variants.
 
 Resulting videos:
 
