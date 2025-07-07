@@ -19,6 +19,8 @@ This tutorial shows how to use [**Nvidia Cosmos-predict2**](https://github
 
 We'll start with a comparison of other methods and models, walk through an easy to perform web-based demo, dive into self-hosting the smaller models, use local AI-labeling models, take full advantage of single-image generation with batching and prompt enrichment with LLMs, before we move to the larger models and video generation.
 
+In case of problems reproducing these walk-throughs, [ComfyUI now supports Cosmos Predict2](https://docs.comfy.org/tutorials/image/cosmos/cosmos-predict2-t2i).
+
 ## Alternative methods
 The traditional method to create training data for visual computing is to manually capture images in the field and to label all objects of interest. As this can be a massive undertaking and it can be challenging to cover special circumstances, [synthetic training data generation](https://docs.edgeimpulse.com/experts/readme/featured-machine-learning-projects/surgery-inventory-synthetic-data) has become a popular supplement. Even with real-time path-tracing and domain randomization methods capable of generating highly controlled masses of data, covering sufficient variation to create robust models can be labor intensive.
 
@@ -55,7 +57,7 @@ Cosmos Predict:
 
 The Sora videos are of great fidelity, but notice how Cosmos Predict defaults to a setting suitable for edge AI scenarios. We could achieve the same results with Sora, but it would require a lot of trial and error with targeted prompting. Without API access to Sora, ability to change seed or negative prompt, methodically generating 10.000s of variations for model training is impractical.
 
-The NVIDIA Cosmos WFMs on the other hand are trained on a curated set of driving and robotics data. The ability to supply multimodal control data and to post-train the models for custom scenarios makes them further suitable for tailored training data generation.
+The NVIDIA Cosmos WFMs on the other hand are trained on a curated set of driving and robotics data. The ability to supply multimodal control data and to post-train the models for custom scenarios makes them further suitable for tailored training data generation. However, don't expect perfect results each time, especially with Cosmos Predict Video2World. Depending on the complexity of the scene some misses should be expected, for this Cosmos has implemented a [rejection sampling mechanism](https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/inference_video2world.md#rejection-sampling-for-quality-improvement), briefly mentioned in this article and covered in-depth in a separate article about Cosmos Reason. 
 
 The Cosmos model's advantages do however come with a cost - they require a lot of compute and require a bit of insight to harness. This article will cover a few different options in getting to know the capabilities of **Cosmos Predict**.
 
@@ -180,7 +182,7 @@ cd cosmos-predict2
 Get a [NVIDIA Build API key](https://build.nvidia.com/settings/api-keys).
 ```bash
 # Pull the Cosmos-Predict2 container
-export NGC_API_KEY=[your_key]
+export NGC_API_KEY=[your_nvidia_key]
 echo "$NGC_API_KEY" | docker login nvcr.io --username '$oauthtoken' --password-stdin
 docker pull nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
 ```
@@ -195,7 +197,7 @@ docker pull nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
 | Cosmos-Predict2-2B-Text2Image | [🤗 Huggingface](https://huggingface.co/nvidia/Cosmos-Predict2-2B-Text2Image) | `python -m scripts.download_checkpoints --model_types text2image --model_sizes 2B` |
 | Cosmos-Predict2-2B-Video2World | [🤗 Huggingface](https://huggingface.co/nvidia/Cosmos-Predict2-2B-Video2World) | `python -m scripts.download_checkpoints --model_types video2world --model_sizes 2B` | Download 720P, 16FPS by default. Supports 480P and 720P resolution. Supports 10FPS and 16FPS |
 
-### Running cosmos-predic2
+### Running cosmos-predict2
 With any luck you will now be able to spin up the container and have the checkpoints you need:
 
 ```bash
@@ -206,9 +208,31 @@ This should land you in a shell in the container, to get a list of options for T
 
 ```bash
 python -m examples.text2image --help
+
+usage: text2image.py [-h] [--model_size {2B,14B}] [--prompt PROMPT] [--batch_input_json BATCH_INPUT_JSON] [--negative_prompt NEGATIVE_PROMPT] [--seed SEED] [--save_path SAVE_PATH] [--use_cuda_graphs]
+                     [--disable_guardrail] [--offload_guardrail] [--benchmark]
+
+Text to Image Generation with Cosmos Predict2
+
+options:
+  -h, --help            show this help message and exit
+  --model_size {2B,14B}
+                        Size of the model to use for text-to-image generation
+  --prompt PROMPT       Text prompt for image generation
+  --batch_input_json BATCH_INPUT_JSON
+                        Path to JSON file containing batch inputs. Each entry should have 'prompt' and 'output_image' fields.
+  --negative_prompt NEGATIVE_PROMPT
+                        Negative text prompt for image generation
+  --seed SEED           Random seed for reproducibility
+  --save_path SAVE_PATH
+                        Path to save the generated image (include file extension)
+  --use_cuda_graphs     Use CUDA Graphs for the inference.
+  --disable_guardrail   Disable guardrail checks on prompts
+  --offload_guardrail   Offload guardrail to CPU to save GPU memory
+  --benchmark           Run the generation in benchmark mode. It means that generation will be rerun a few times and the average generation time will be shown.
 ```
 
-Now we can run single frame generation with any prompt, optionally supplying `--NEGATIVE_PROMPT="${NEGATIVE_PROMPT}"`
+Now we can run single frame generation with any prompt, optionally supplying `--negative_prompt="${NEGATIVE_PROMPT}"`
 ```bash
 python -m examples.text2image \
     --prompt "${PROMPT}" \
@@ -324,6 +348,10 @@ if __name__ == "__main__":
 
 3. Run with `python run_can_factory_batches.py --n 3`
 
+For this article more than 6000 images were generated with this method. Using the 2B model and an RTX 5090 the generation process took 30 hours. As we soon will see, expanding variation in the batch file reduces model loading time and significantly speeds up mass generation.
+
+![](images/can_factory/can_factory_batch.png "Batch output")
+
 ## Notes on prompting for realism
 Diffusion models like the one Cosmos Predic uses are currently achieving increadible image fidelity. When generating images for training object detection models intended to run on constrained hardware, or any type of hardware for that matter, best results are achieved by generating images of a quality that closest resembles the quality the device itself produces. This should in theory be possible to achieve by prompting e.g. 
 ```
@@ -358,7 +386,9 @@ This will produce 30 images with different settings for each iteration. Then the
 
 Notice how some images show larger or smaller cans than expected, this is a non-issue on training object detection models as the neural networks are to a minimal degree sensitive to scaling of visual features.
 
-![](images/can_factory_enhanced.webp "LLM-augmented prompt generation for Text2Image")
+300 images were generated for this article with this method, adding more variation with decreased total generation time.
+
+![](images/can_factory_enhanced/can_factory_enhanced_batch.png "Batch")
 
 ### AI labeling with Grounded Segment Anything 2
 In contrast to Cosmos-Transfer we have no way of producing bounding boxes or labels of our objects of interest with these image or video clip generators. Without labels our images are useless for machine learning. Manually drawing bounding boxes and classifying tens of objects per image requires a large amount of manual labor. Many AI segmentation models are available, but stand-alone they require some input on what objects we want to label. Manually selecting the objects of interest would still require a huge effort. Thankfully it is possible to combine segmentation models with multimodal Visual Language Models. This way we can use natural language to select only the objects of interest and discard the rest of the objects the segmentation model has identified. The following will walk through using one of many Open Vocabolary Object-Detection (OVD) pipelines, [**Grounded Segment Anything 2**](https://github.com/IDEA-Research/Grounded-SAM-2) with [**DINO 1.0**](https://github.com/IDEA-Research/GroundingDINO). This repo supports many different pipeline configurations, many grounding models and can be a bit overwhelming. Grounding DINO 1.0 might not be the best performing alternative but it's open source and works for common objects. For niche objects [**DINO 1.5**](https://github.com/IDEA-Research/Grounding-DINO-1.5-API), [**DINO-X**](https://github.com/IDEA-Research/DINO-X-API) might reduce false positives by 30-40%, but these models require API-access and might be rate limited.
@@ -434,10 +464,258 @@ Now the dataset is ready for uploading to Edge Impulse Studio. Practically the i
 Once in Edge Impulse Studio we can design an object detection neural network and evalutate the results. We can keep generating more data until classification results stop improving.
 ![](images/EI-evaluate-model.png "Classification results")
 
-## 
+## 14B models, Text2World and Video2World
+To be able to run the larger models a home-GPU just won't cut it. Luckily we can experiment with the models with beefier hardware with little commitment. Many services offer pay-per-use GPU resources. For the Cosmos models we need to keep in mind that we need rather updated NVIDIA drivers and that the platforms usually only allow access to a docker container with no possibility for upgrading said drivers. Uncovering this up-front is almost impossible, outside contacting support. Beware before investing a lot in prepaid tokens! For instance, when attempting to run the Cosmos-Predic2 docker container on a NVIDIA H100 80GB host at [RunPod.io](https://www.runpod.io/) as of June 2025, one would get this warning:
 
-python grounded_sam2_tracking_demo_custom_video_input_gd1.0_local_model.py --video_path ../edgeai-synthetic-cosmos-predict1/videos/cosmos-predic-web-docks-rain.mp4 --text_prompt "drone. container. forklift. semitrailer." --OUTPUT_VIDEO_PATH ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/rain.mp4 --SOURCE_VIDEO_FRAME_DIR ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/custom_video_frames --SAVE_TRACKING_RESULTS_DIR ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/tracking_results
+```
+ERROR: This container was built for NVIDIA Driver Release 570.86 or later, but version 565.57.01 was detected and compatibility mode is UNAVAILABLE.
+```
 
-python grounded_sam2_tracking_demo_custom_video_input_gd1.0_local_model.py --video_path ../edgeai-synthetic-cosmos-predict1/videos/cosmos-predic-web-docks-rain.mp4 --text_prompt "drone. container. forklift. semitrailer." --OUTPUT_VIDEO_PATH ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/rain.mp4 --SOURCE_VIDEO_FRAME_DIR ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/custom_video_frames --SAVE_TRACKING_RESULTS_DIR ../edgeai-synthetic-cosmos-predict1/labelling-grounded-sam2/rain/tracking_results
+Driver version an be revealed using `nvidia-smi` and we need something like:
 
+```
+ubuntu@192-222-53-195:~$ nvidia-smi
+Sat May 24 12:47:34 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 570.124.06             Driver Version: 570.124.06     CUDA Version: 12.8     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:07:00.0 Off |                    0 |
+| N/A   30C    P0             69W /  700W |       1MiB /  81559MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+```
 
+[Lambda Cloud](https://lambda.ai/service/gpu-cloud) offers hosts that generally are running up-to-date drivers and was used for this article.
+
+![](images/Lambda-Cloud-Launch-Instance.png "Lambda Cloud")
+
+Storage is often bound by geolocation, so it is advisable to investigate where your preferred GPUs are located first. A **1x H100 80GB VRAM** is enough to run all models, provided you disable or offload prompt guardrails and prompt refiner. For faster inference, see [Multi-GPU Inference](https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/inference_video2world.md#multi-gpu-inference).
+
+### Setup with Docker image
+
+```bash
+# To see system resources in web UI download and run the Lambda agent.
+curl -L https://lambdalabs-guest-agent.s3.us-west-2.amazonaws.com/scripts/install.sh | sudo bash
+
+# We need to add our default Lambda Ubuntu user to docker for permissions.
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Clone Cosmos-Predict2
+git clone git@github.com:nvidia-cosmos/cosmos-predict2.git
+cd cosmos-predict2
+
+# Add your HuggingFace token for downloading model checkpoints
+pip install huggingface_hub
+#or conda install -c conda-forge huggingface_hub
+huggingface-cli login
+
+# Pull all relevant model checkpoints https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/setup.md
+python -m scripts.download_checkpoints --model_types text2image --model_sizes 2B 14B
+python -m scripts.download_checkpoints --model_types video2world --model_sizes 2B 14B
+
+# Login with NVIDIA Build account to get token for downloading Docker image
+export NGC_API_KEY=[your_nvidia_key]
+
+echo "$NGC_API_KEY" | docker login nvcr.io --username '$oauthtoken' --password-stdin
+docker pull nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
+# Optionally save image locally to save download time next time
+docker save -o /lambda/nfs/[network storage]/cosmos-predict2-1.0.tar nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
+
+# Run Docker container
+sudo docker run --gpus all -it --rm -v "$(pwd)":/workspace -v "$(pwd)/datasets":/workspace/datasets -v "$(pwd)/checkpoints":/workspace/checkpoints nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
+```
+
+```bash
+# Lambda hosts come without Conda, if you prefer it for virtual environments.
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+source ~/.bashrc
+conda env create -f cosmos-predict2.yaml
+```
+
+If you saved the Docker image locally you can speed up loading it the next time, just remember to check for updates once in a while.
+
+```bash
+# Instead of: docker pull nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0 
+docker load -i /lambda/nfs/[network storage]/cosmos-predict2-1.0.tar
+# Run Docker container
+sudo docker run --gpus all -it --rm -v "$(pwd)":/workspace -v "$(pwd)/datasets":/workspace/datasets -v "$(pwd)/checkpoints":/workspace/checkpoints nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
+```
+
+### Inference, [Text2World](https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/inference_text2world.md)
+The default model checkpoints will produce 720p, 16 fps videos that last 5 seconds.
+
+```bash
+python -m examples.text2world --help
+
+usage: text2world.py [-h] [--model_size {2B,14B}] [--prompt PROMPT] [--batch_input_json BATCH_INPUT_JSON] [--negative_prompt NEGATIVE_PROMPT] [--seed SEED] [--save_path SAVE_PATH] [--disable_guardrail] [--num_gpus NUM_GPUS]
+                     [--benchmark] [--use_cuda_graphs] [--resolution {480,720}] [--fps {10,16}] [--dit_path DIT_PATH] [--guidance GUIDANCE] [--offload_guardrail] [--disable_prompt_refiner] [--offload_prompt_refiner]
+
+Text to World Generation with Cosmos Predict2
+
+options:
+  -h, --help            show this help message and exit
+  --model_size {2B,14B}
+                        Size of the model to use for text2world generation
+  --prompt PROMPT       Text prompt for generation
+  --batch_input_json BATCH_INPUT_JSON
+                        Path to JSON file containing batch inputs. Each entry should have 'prompt' and 'output_video' fields.
+  --negative_prompt NEGATIVE_PROMPT
+                        Negative text prompt for video2world generation
+  --seed SEED           Random seed for reproducibility
+  --save_path SAVE_PATH
+                        Path to save the generated video (include file extension)
+  --disable_guardrail   Disable guardrail checks on prompts
+  --num_gpus NUM_GPUS   Number of GPUs to use for context parallel inference for both text2image and video2world parts
+  --benchmark           Run the generation in benchmark mode. It means that generation will be rerun a few times and the average generation time will be shown.
+  --use_cuda_graphs     Use CUDA Graphs for the text2image inference.
+  --resolution {480,720}
+                        Resolution of the model to use for video-to-world generation
+  --fps {10,16}         FPS of the model to use for video-to-world generation
+  --dit_path DIT_PATH   Custom path to the DiT model checkpoint for post-trained models.
+  --guidance GUIDANCE   Guidance value for video generation
+  --offload_guardrail   Offload guardrail to CPU to save GPU memory
+  --disable_prompt_refiner
+                        Disable prompt refiner that enhances short prompts
+  --offload_prompt_refiner
+                        Offload prompt refiner to CPU to save GPU memory
+```
+
+It is recommended to experiment with 2B models and move on to 14B if needed, due to much longer model load time and inference. Behind the scenes Text2World uses Text2Image to create the first frame, then this frame and the prompt is chained with Video2World to generate a video sequence.
+
+Even with 80GB VRAM we can run into the following OOM message:
+
+```
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 2.58 GiB. GPU 0 has a total capacity of 79.19 GiB of which 1.23 GiB is free. Including non-PyTorch memory, this process has 77.95 GiB memory in use. Of the allocated memory 76.58 GiB is allocated by PyTorch, and 714.13 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+```
+In this case, try offloading or disabling prompt-refiner and/or guardrails. Offloading means running it on CPU.
+
+```bash
+PROMPT="Walk-through a crowded emergency room waiting area. Hospital staff checking wall monitors."
+
+python -m examples.text2world \
+    --model_size 2B \
+    --prompt "${PROMPT}" \
+    --save_path output/text2world_2b.mp4 \
+    --disable_guardrail \
+    --offload_prompt_refiner
+```
+
+[![Cosmos-Predict1-7B-Text2World Emergency room waiting room](https://img.youtube.com/vi/GGe0ge2tt7o/0.jpg)](https://youtu.be/GGe0ge2tt7o)
+
+### Inference, [Video2World](https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/inference_video2world.md)
+As the name suggests Video2World can extend an existing video clip. However, it can be used as an alternative starting point to Text2World by taking a text prompt and an image as input. It is possible to [chain clip generation](https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/inference_video2world.md#long-video-generation) to extend clip duration but that is a more advanced topic that should be run on a multi-GPU setup.
+
+Common usages would be to take a manually captured image and combine with a prompt to produce a video clip. We can also pick the best generated Text2Image results and generate clips. This is a low-effort way to generate many images of the same objects from slightly different angles. This is the same as using Text2World, but we get to be more selective on the input images. With Text2World we won't know if the initial frame is any good before the whole process is complete (note, it is actually possible to view the temporarily created first frame, but this is not very practical when processing large batches over night).
+
+```bash
+python -m examples.video2world --help
+
+usage: video2world.py [-h] [--model_size {2B,14B}] [--resolution {480,720}] [--fps {10,16}] [--dit_path DIT_PATH] [--prompt PROMPT] [--input_path INPUT_PATH] [--negative_prompt NEGATIVE_PROMPT]
+                      [--num_conditional_frames {1,5}] [--batch_input_json BATCH_INPUT_JSON] [--guidance GUIDANCE] [--seed SEED] [--save_path SAVE_PATH] [--num_gpus NUM_GPUS] [--disable_guardrail]
+                      [--offload_guardrail] [--disable_prompt_refiner] [--offload_prompt_refiner] [--benchmark]
+
+Video-to-World Generation with Cosmos Predict2
+
+options:
+  -h, --help            show this help message and exit
+  --model_size {2B,14B}
+                        Size of the model to use for video-to-world generation
+  --resolution {480,720}
+                        Resolution of the model to use for video-to-world generation
+  --fps {10,16}         FPS of the model to use for video-to-world generation
+  --dit_path DIT_PATH   Custom path to the DiT model checkpoint for post-trained models.
+  --prompt PROMPT       Text prompt for video generation
+  --input_path INPUT_PATH
+                        Path to input image or video for conditioning (include file extension)
+  --negative_prompt NEGATIVE_PROMPT
+                        Negative text prompt for video-to-world generation
+  --num_conditional_frames {1,5}
+                        Number of frames to condition on (1 for single frame, 5 for multi-frame conditioning)
+  --batch_input_json BATCH_INPUT_JSON
+                        Path to JSON file containing batch inputs. Each entry should have 'input_video', 'prompt', and 'output_video' fields.
+  --guidance GUIDANCE   Guidance value
+  --seed SEED           Random seed for reproducibility
+  --save_path SAVE_PATH
+                        Path to save the generated video (include file extension)
+  --num_gpus NUM_GPUS   Number of GPUs to use for context parallel inference (should be a divisor of the total frames)
+  --disable_guardrail   Disable guardrail checks on prompts
+  --offload_guardrail   Offload guardrail to CPU to save GPU memory
+  --disable_prompt_refiner
+                        Disable prompt refiner that enhances short prompts
+  --offload_prompt_refiner
+                        Offload prompt refiner to CPU to save GPU memory
+  --benchmark           Run the generation in benchmark mode. It means that generation will be rerun a few times and the average generation time will be shown.
+```
+
+Input image
+![NVIDIA Cosmos-Predict2-14B-Video2World demo 00092](/images/can_factory_enhanced/00092.jpg)
+```bash
+PROMPT="A conveyor belt steadily transports soda cans in a factory setting. The soda cans move slowly without jumping or bumping. The cans are only moved by the conveyor belt, they don't slide around or spin. Cans that disappear out of view don't return, new cans don't appear. Workers inspect the cans as they pass by, ensuring quality control. Our view is fixed focusing on the cans as they move along the conveyor belt."
+
+python -m examples.video2world \
+    --model_size 14B \
+    --input_path assets/can_factory/00092.jpg \
+    --seed 0 \
+    --prompt "${PROMPT}" \
+    --save_path outputs/can_factory_video2world_14b_00092.mp4 \
+    --disable_guardrail \
+    --offload_prompt_refiner
+```
+Resulting video
+
+[![NVIDIA Cosmos-Predict2-14B-Video2World demo 00092](https://img.youtube.com/vi/-GF7wZsc3c8/0.jpg)](https://youtu.be/-GF7wZsc3c8)
+
+As with Text2Image we can put this into system with batching.
+```json
+batch_video_can_factory.json:
+[
+  {
+    "input_video": "assets/can_factory_enhanced/00018.jpg",
+    "prompt": "A conveyor belt steadily transports soda cans in a factory setting. The soda cans move slowly without jumping or bumping. The cans are only moved by the conveyor belt, they don't slide around or spin. Cans that disappear out of view don't return, new cans don't appear. Workers inspect the cans as they pass by, ensuring quality control. Our view is fixed focusing on the cans as they move along the conveyor belt.",
+    "output_video": "outputs/can_factory_enhanced/00018.mp4"
+  },
+  {
+    "input_video": "assets/can_factory_enhanced_03/00020.jpg",
+    "prompt": "A conveyor belt steadily transports soda cans in a factory setting. The soda cans move slowly without jumping or bumping. The cans are only moved by the conveyor belt, they don't slide around or spin. Cans that disappear out of view don't return, new cans don't appear. Workers inspect the cans as they pass by, ensuring quality control. Our view is fixed focusing on the cans as they move along the conveyor belt.",
+    "output_video": "outputs/can_factory_enhanced/00020.mp4"
+  },
+  ...
+]
+```
+
+```bash
+python -m examples.video2world \
+    --model_size 14B \
+    --batch_input_json assets/can_factory_enhanced/batch_video_can_factory.json \
+    --disable_guardrail \
+    --offload_prompt_refiner
+```
+This can be looped, incrementing or randomizing `--seed` to create different variants.
+
+Resulting videos:
+
+[![NVIDIA Cosmos Predict2 Video2World 2B-14B Can factory demo](https://img.youtube.com/vi/n9JPE182RBc/0.jpg)](https://youtu.be/n9JPE182RBc)
+
+For this use case the highest rate of success was achieved by generating images with the 2B parameters Text2Image model and then using the 14B parameters Video2World to generate video clips. When using 14B Text2Image and 14B Video2World the videos would have higher fidelity with regards to details, but in 3 out of 4 attempts there would be some sort of physical anormaly rendering the video looking strange. Out of 40 attempts the following compilation shows the only consistent results. For object detection however, most of the results would still be usable, as we would extract all frames individually and not care about weird movement.
+
+[![NVIDIA Cosmos Predict2 Video2World 14B-14B Can factory demo](https://img.youtube.com/vi/hyG2tCUQsDA/0.jpg)](https://youtu.be/hyG2tCUQsDA)
+
+## Rejection Sampling for Quality Improvement
+We can automatically combat undesired results with [rejection sampling](https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/inference_video2world.md#rejection-sampling-for-quality-improvement). We can specify a number of video generation attempts and use Cosmos Reason to score the results.
+
+# Conclusion
+Diffusion models have come a long way in a short time. Advanced computer graphics simulation phenomena such as reflections and color bleeding due to global illumination are now convincingly replaced by learned distributions in latent vector spaces.
+
+![NVIDIA Cosmos-Predict2-14B-Video2World demo 00092](/images/can_factory/00231.jpg)
+
+Overall, Cosmos Predict serves as a low-effort alternative to supplement or replace manually captured training images for visual computing. Only provided text prompts, we can generate still images and video clips that would otherwise require field-work or in some cases complex 3D modelling. Variations can easily be achieved manually in prompts, or automated by LLM. Since the models are trained on curated training material typically used in training robotics and autonomous vehicles, much less effort has to be spent tuning prompts for desired output, compared to more generalized video generators. For specialized needs the models are ready for post-training.
+
+The models are computationally heavy and suffer from the same challenges of post-AI-labeling as manually captured images and videos. Better segmentation- and object detection models are available than demonstrated in this article, however if this is a large issue in a use case Cosmos Transfer offers an alternative method by combining multimodal control signals, for instance from a 3D modelled representation, with text prompted variations.
+
+Whether generating still images for object detection model training is more efficient than generating video clips depends on the use case and should be evaluated. The difference between the output of 2B parameter models and 14B was surprisingly smaller than expected in testing for this article, but this should be explored on a case-to-case basis.
