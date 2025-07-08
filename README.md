@@ -1,5 +1,7 @@
 # Creating object detection model for edge AI using synthetic training images created with NVIDIA Cosmos-Predict2
 
+[![Warehouse Robot Video Cosmos-Predict1-7B-Text2World](/images/14B-Image-splash-01.png)](https://youtu.be/IRxAY49st1E)
+
 ## Preface
 NVIDIA has released a family of World Foundation Models (WFMs). All models have to some degree overlapping areas of use and can be combined for an efficient pipeline. This article is about **Cosmos Predict**, **Cosmos Transfer** and **Cosmos Reason** are covered in separate articles.
 
@@ -18,6 +20,8 @@ All models are pre-trained for autonomous vehicle and robotic scenarios, and sup
 This tutorial shows how to use [**NVIDIA Cosmos-predict2**](https://github.com/nvidia-cosmos/cosmos-predict2), released June 2025 to generate physics aware synthetic images for training models for visual computing. The tutorial will show hands-on approaches on how to generate text- and image-prompted images and videos, automatically segment and label objects of interest and prepare data for model training in [Edge Impulse Studio](https://edgeimpulse.com/).
 
 We'll start with a comparison of other methods and models, walk through an easy to perform web-based demo, dive into self-hosting the smaller models, use local AI-labeling models, take full advantage of single-image generation with batching and prompt enrichment with LLMs, before we move to the larger models and video generation.
+
+[![NVIDIA Cosmos Predict2 Video2World 14B-14B Can factory demo](/images/14B-14B-splash_01-01.png)](https://youtu.be/hyG2tCUQsDA)
 
 In case of problems reproducing these walk-throughs, [ComfyUI now supports Cosmos Predict2](https://docs.comfy.org/tutorials/image/cosmos/cosmos-predict2-t2i).
 
@@ -351,7 +355,7 @@ if __name__ == "__main__":
 
 For this article more than 6000 images were generated with this method. Using the 2B model and an RTX 5090 the generation process took 30 hours. As we soon will see, expanding variation in the batch file reduces model loading time and significantly speeds up mass generation.
 
-![](images/can_factory/can_factory_batch.png "Batch output")
+![](images/can_factory_batch.png "Batch output")
 
 > Notes on prompting for realism
 > 
@@ -392,7 +396,7 @@ Notice how some images show larger or smaller cans than expected, this is a non-
 
 300 images were generated for this article with this method, adding more variation with decreased total generation time.
 
-![](images/can_factory_enhanced/can_factory_enhanced_batch.png "Batch")
+![](images/can_factory_enhanced_batch.png "Batch")
 
 ### AI labeling with Grounded Segment Anything 2
 In contrast to Cosmos-Transfer we have no way of producing bounding boxes or labels of our objects of interest with these image or video clip generators. Without labels our images are useless for machine learning. Manually drawing bounding boxes and classifying tens of objects per image requires a large amount of manual labor. Many AI segmentation models are available, but stand-alone they require some input on what objects we want to label. Manually selecting the objects of interest would still require a huge effort. Thankfully it is possible to combine segmentation models with multimodal Visual Language Models. This way we can use natural language to select only the objects of interest and discard the rest of the objects the segmentation model has identified. The following will walk through using one of many Open Vocabolary Object-Detection (OVD) pipelines, [**Grounded Segment Anything 2**](https://github.com/IDEA-Research/Grounded-SAM-2) with [**DINO 1.0**](https://github.com/IDEA-Research/GroundingDINO). This repo supports many different pipeline configurations, many grounding models and can be a bit overwhelming. Grounding DINO 1.0 might not be the best performing alternative but it's open source and works for common objects. For niche objects [**DINO 1.5**](https://github.com/IDEA-Research/Grounding-DINO-1.5-API), [**DINO-X**](https://github.com/IDEA-Research/DINO-X-API) might reduce false positives by 30-40%, but these models require API-access and might be rate limited.
@@ -658,7 +662,7 @@ options:
 ```
 
 Input image
-![NVIDIA Cosmos-Predict2-14B-Video2World demo 00092](/images/can_factory_enhanced/00092.jpg)
+![NVIDIA Cosmos-Predict2-14B-Video2World demo 00092](/images/00092.jpg)
 ```bash
 PROMPT="A conveyor belt steadily transports soda cans in a factory setting. The soda cans move slowly without jumping or bumping. The cans are only moved by the conveyor belt, they don't slide around or spin. Cans that disappear out of view don't return, new cans don't appear. Workers inspect the cans as they pass by, ensuring quality control. Our view is fixed focusing on the cans as they move along the conveyor belt."
 
@@ -704,11 +708,11 @@ This can be looped, while incrementing or randomizing `--seed` to create differe
 
 Resulting videos:
 
-[![NVIDIA Cosmos Predict2 Video2World 2B-14B Can factory demo](https://img.youtube.com/vi/n9JPE182RBc/0.jpg)](https://youtu.be/n9JPE182RBc)
+[![NVIDIA Cosmos Predict2 Video2World 2B-14B Can factory demo](/images/2B-14B-splash-01.png)](https://youtu.be/n9JPE182RBc)
 
 For this use case the highest rate of success was achieved by generating images with the 2B parameters Text2Image model and then using the 14B parameters Video2World to generate video clips. When using 14B Text2Image and 14B Video2World the videos would have higher fidelity with regards to details, but in 3 out of 4 attempts there would be some sort of physical anormaly rendering the video looking strange. Out of 40 attempts the following compilation shows the only consistent results. For object detection however, most of the results would still be usable, as we would extract all frames individually and not care about weird movement.
 
-[![NVIDIA Cosmos Predict2 Video2World 14B-14B Can factory demo](https://img.youtube.com/vi/hyG2tCUQsDA/0.jpg)](https://youtu.be/hyG2tCUQsDA)
+[![NVIDIA Cosmos Predict2 Video2World 14B-14B Can factory demo](/images/14B-14B-splash_01-01.png)](https://youtu.be/hyG2tCUQsDA)
 
 ## Rejection Sampling for Quality Improvement
 We can automatically combat undesired results with [rejection sampling](https://github.com/nvidia-cosmos/cosmos-predict2/blob/main/documentations/inference_video2world.md#rejection-sampling-for-quality-improvement). We can specify a number of video generation attempts and use Cosmos Reason to score the results.
@@ -716,10 +720,20 @@ We can automatically combat undesired results with [rejection sampling](https://
 # Conclusion
 Diffusion models have come a long way in a short time. Advanced computer graphics simulation phenomena such as reflections and color bleeding due to global illumination are now convincingly replaced by learned distributions in latent vector spaces.
 
-![NVIDIA Cosmos-Predict2-14B-Video2World demo 00092](/images/can_factory/00231.jpg)
+![NVIDIA Cosmos-Predict2-14B-Text2Image demo](/images/00231.jpg)
 
 Overall, Cosmos Predict serves as a low-effort alternative to supplement or replace manually captured training images for visual computing. Only provided text prompts, we can generate still images and video clips that would otherwise require field-work or in some cases complex 3D modelling. Variations can easily be achieved manually in prompts, or automated by LLM. Since the models are trained on curated training material typically used in training robotics and autonomous vehicles, much less effort has to be spent tuning prompts for desired output, compared to more generalized video generators. For specialized needs the models are ready for post-training.
 
 The models are computationally heavy and suffer from the same challenges of post-AI-labeling as manually captured images and videos. Better segmentation- and object detection models are available than demonstrated in this article, however if this is a large issue in a use case Cosmos Transfer offers an alternative method by combining multimodal control signals, for instance from a 3D modelled representation, with text prompted variations.
 
 Whether generating still images for object detection model training is more efficient than generating video clips depends on the use case and should be evaluated. The difference between the output of 2B parameter models and 14B was surprisingly smaller than expected in testing for this article, but this should be explored on a case-to-case basis.
+
+![NVIDIA Cosmos-Predict2-14B-Text2Image demo](/images/annotated_00003.jpg)
+
+![NVIDIA Cosmos-Predict2-14B-Text2Image demo](/images/annotated_00110.jpg)
+
+![NVIDIA Cosmos-Predict2-14B-Text2Image demo](/images/annotated_00120.jpg)
+
+![NVIDIA Cosmos-Predict2-14B-Text2Image demo](/images/annotated_00163.jpg)
+
+![NVIDIA Cosmos-Predict2-14B-Text2Image demo](/images/annotated_00071.jpg)
