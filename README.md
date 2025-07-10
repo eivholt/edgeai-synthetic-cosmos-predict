@@ -44,7 +44,7 @@ Training image generation with these types of models have the disadvantages of b
 Some comparisons:
 
 ```
-The video is a first-person perspective from the viewpoint of a large, humanoid robot navigating through a factory or industrial setting. The robot is equipped with a camera mounted on its head, providing a view of the surroundings. The environment is a spacious, well-lit industrial area with high ceilings and large windows, allowing natural light to flood the space. The floor is made of a smooth, reflective material, possibly concrete or polished metal, which enhances the robot's movement and reflections.
+The video is a first-person perspective from the viewpoint of a robot navigating through a factory or industrial setting. The robot is equipped with a camera mounted on its head, providing a view of the surroundings. The environment is a spacious, well-lit industrial area with high ceilings and large windows, allowing natural light to flood the space. The floor is made of a smooth, reflective material, possibly concrete or polished metal, which enhances the robot's movement and reflections.
 ```
 
 Sora:
