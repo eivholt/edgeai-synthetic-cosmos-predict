@@ -11,6 +11,10 @@ NVIDIA has released a family of World Foundation Models (WFMs). All models have 
 
 All models are pre-trained for autonomous vehicle and robotic scenarios, and support post-training for specific use cases.
 
+Video tutorial:
+
+[![Video tutorial](https://img.youtube.com/vi/mJUKTgjDUEY/0.jpg)](https://youtu.be/mJUKTgjDUEY)
+
 ## Prerequisites
 - Python
 - Optional: Access to NVIDIA GPU with at least 32 GB VRAM
@@ -107,7 +111,7 @@ fetch(vid.src)
     a.href = downloadUrl;
 
     // Choose a filename (you can change .webm to .mp4)
-    a.download = 'video.webm';
+    a.download = 'video.mp4';
 
     document.body.appendChild(a);
     a.click();
@@ -238,6 +242,11 @@ options:
 ```
 
 Now we can run single frame generation with any prompt, optionally supplying `--negative_prompt="${NEGATIVE_PROMPT}"`
+
+```bash
+PROMPT="A small parking lot with different types of european cars, some spaces empty. Parking spaces line the edges of the lot, each space are of equal size. Cars entering and leaving. People walking to and from cars. Sedans, hatchbacks, station wagons, pickup trucks, white vans. Dusk, low sun, street lights."
+```
+
 ```bash
 python -m examples.text2image \
     --prompt "${PROMPT}" \
@@ -246,9 +255,7 @@ python -m examples.text2image \
     --save_path outputs/my_image01.jpg
 ```
 
-```bash
-PROMPT="A small parking lot with different types of european cars, some spaces empty. Parking spaces line the edges of the lot, each space are of equal size. Cars entering and leaving. People walking to and from cars. Sedans, hatchbacks, station wagons, pickup trucks, white vans. Dusk, low sun, street lights."
-```
+
 ![](images/parking.webp "Parking lot Text2Image-2B")
 
 ```bash
